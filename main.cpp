@@ -1,54 +1,98 @@
+#include <netinet/in.h> 
 
-#include <pcap.h>
-	 #include <stdio.h>
+#include <pcap.h>       g
+
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <netinet/ether.h>
+
+#include <netinet/ip.h>
+
+#include <netinet/tcp.h>
+
+#include <arpa/inet.h>
+
+#include "libnet-headers.h"
+
+void callback(u_char *useless, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
 
-	 int main(int argc, char *argv[])
-	 {
-		pcap_t *handle;			/* Session handle */
-		char *dev;			/* The device to sniff on */
-		char errbuf[PCAP_ERRBUF_SIZE];	/* Error string */
-		struct bpf_program fp;		/* The compiled filter */
-		char filter_exp[] = "port 23";	/* The filter expression */
-		bpf_u_int32 mask;		/* Our netmask */
-		bpf_u_int32 net;		/* Our IP */
-		struct pcap_pkthdr header;	/* The header that pcap gives us */
-		const u_char *packet;		/* The actual packet */
 
-		/* Define the device */
-		dev = pcap_lookupdev(errbuf);
-		if (dev == NULL) {
-			fprintf(stderr, "Couldn't find default device: %s\n", errbuf);
-			return(2);
-		}
-		/* Find the properties for the device */
-		if (pcap_lookupnet(dev, &net, &mask, errbuf) == -1) {
-			fprintf(stderr, "Couldn't get netmask for device %s: %s\n", dev, errbuf);
-			net = 0;
-			mask = 0;
-		}
-		/* Open the session in promiscuous mode */
-		handle = pcap_open_live(dev, BUFSIZ, 1, 1000, errbuf);
-		if (handle == NULL) {
-			fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
-			return(2);
-		}
-		/* Compile and apply the filter */
-		if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
-			fprintf(stderr, "Couldn't parse filter %s: %s\n", filter_exp, pcap_geterr(handle));
-			return(2);
-		}
-		if (pcap_setfilter(handle, &fp) == -1) {
-			fprintf(stderr, "Couldn't install filter %s: %s\n", filter_exp, pcap_geterr(handle));
-			return(2);
-		}
-		/* Grab a packet */
-		packet = pcap_next(handle, &header);
-		/* Print its length */
-		printf("Jacked a packet with length of [%d]\n", header.len);
-		/* And close the session */
-		pcap_close(handle);
-		
-	return(0);
-		 
+int main(int argc, char **argv)
+
+{
+    char *dev;
+    char errbuf[PCAP_ERRBUF_SIZE];
+
+    pcap_t *pcd;
+
+    dev = pcap_lookupdev(errbuf);
+
+
+    if(dev == NULL)
+    {
+        printf("%s\n",errbuf);
+        exit(1);
+    }
+
+    
+    pcd = pcap_open_live(dev, BUFSIZ,  1/*PROMISCUOUS*/, -1, errbuf);
+
+    if (pcd == NULL)
+    {
+        printf("%s\n", errbuf);
+        exit(1);
+    }
+
+    pcap_loop(pcd, 0, callback, NULL);
+}
+
+void callback(u_char *useless, const struct pcap_pkthdr *pkthdr, const u_char *packet )
+{
+	struct libnet_ethernet_hdr * eth_hdr;
+	struct libnet_ipv4_hdr * ip_hdr;
+ 	struct libnet_tcp_hdr * tcp_hdr;
+
+	int i, Data_len;
+
+
+	
+
+	eth_hdr = (struct libnet_ethernet_hdr*)packet;
+	printf("src MAC:%s\n", ether_ntoa(eth_hdr->ether_shost));
+	printf("dst MAC:%s\n", ether_ntoa(eth_hdr->ether_dhost));
+
+	if(ntohs(eth_hdr->ether_type)!=0x0800)
+	{
+		printf("IP use X"\n");
+		return;
 	}
+	
+	ip_hdr =(struct libnet_ipv4_hdr *)(packet+14);
+	printf("src IP:%s\n", inet_ntoa(ip_hdr->ip_src));
+	printf("dst IP:%s\n", inet_ntoa(ip_hdr->ip_dst));
+
+	if(ip_hdr->ip_p != 0x06)
+	{
+		printf("TCP use X"\n");
+		return;
+	}	
+
+ 	tcp_hdr =(struct libnet_tcp_hdr *)(packet+14+4*(ip_hdr->ip_hl));
+	printf("Src port: %d\n", ntohs(tcp_hdr->th_sport));
+    	printf("Dst port: %d\n", ntohs(tcp_hdr->th_dport));
+	
+
+	Data_len = pkthdr->caplen-14-4*(ip_hdr->ip_hl)-4*(tcp_hdr->th_off);
+	
+	printf("Data:\n");
+	for(i=0;i< Data_len;i++)
+	{
+		printf("%02x ", packet[14+4*(ip_hdr->ip_hl)+4*(tcp_hdr->th_off)+i];
+	}
+	printf("\n\n");
+
+}
+
