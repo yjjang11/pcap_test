@@ -90,7 +90,7 @@ void callback(u_char *useless, const struct pcap_pkthdr *pkthdr, const u_char *p
 	printf("Data:\n");
 	for(i=0;i< Data_len;i++)
 	{
-		printf("%02x ", packet[14+4*(ip_hdr->ip_hl)+4*(tcp_hdr->th_off)+i];
+		printf("%02x ", packet[14+4*(ip_hdr->ip_hl)+4*(tcp_hdr->th_off)+i]);
 	}
 	printf("\n\n");
 
