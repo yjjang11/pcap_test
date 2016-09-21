@@ -1,6 +1,6 @@
 #include <netinet/in.h> 
 
-#include <pcap.h>       g
+#include <pcap.h>       
 
 #include <stdio.h>
 
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     }
 
     
-    pcd = pcap_open_live(dev, BUFSIZ,  1/*PROMISCUOUS*/, -1, errbuf);
+    pcd = pcap_open_live(dev, BUFSIZ,  1, -1, errbuf);
 
     if (pcd == NULL)
     {
