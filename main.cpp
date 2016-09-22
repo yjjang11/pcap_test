@@ -41,8 +41,7 @@ int main(int argc, char *argv[])
 		
 		packet = pcap_next(handle, &header);//grab a packet
 		printf("jacked a packet wuth length of (%d)\n", header.len);
-		pcap_close(handle);
-		
+
 		struct libnet_ethernet_hdr * eth_hdr; 
 		struct libnet_ipv4_hdr * ip_hdr; 
   		struct libnet_tcp_hdr * tcp_hdr; 
@@ -82,7 +81,7 @@ int main(int argc, char *argv[])
  
  	}
 
-
+	pcap_close(handle);
 	return(0);
 }
 
