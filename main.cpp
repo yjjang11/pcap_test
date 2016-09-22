@@ -6,6 +6,8 @@
 
 int main(int argc, char *argv[])
 {
+	int i=0, Data_len=0; 
+	
 	pcap_t *handle;
 	
 	char *dev; 
@@ -35,6 +37,8 @@ int main(int argc, char *argv[])
 
 	while(1)
 	{
+		i=0, Data_len=0;
+		
 		packet = pcap_next(handle, &header);//grab a packet
 		printf("jacked a packet wuth length of (%d)\n", header.len);
 		pcap_close(handle);
@@ -43,8 +47,6 @@ int main(int argc, char *argv[])
 		struct libnet_ipv4_hdr * ip_hdr; 
   		struct libnet_tcp_hdr * tcp_hdr; 
 
- 		int i, Data_len; 
- 
  		eth_hdr = (struct libnet_ethernet_hdr*)packet; 
 		printf("src MAC:%s\n", ether_ntoa(eth_hdr->ether_shost)); 
 		printf("dst MAC:%s\n", ether_ntoa(eth_hdr->ether_dhost)); 
