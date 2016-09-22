@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		printf("Src port: %d\n", ntohs(tcp_hdr->th_sport)); 
      		printf("Dst port: %d\n", ntohs(tcp_hdr->th_dport)); 
 	 
- 		Data_len = header->caplen-14-4*(ip_hdr->ip_hl)-4*(tcp_hdr->th_off); 
+ 		Data_len = header.len-14-4*(ip_hdr->ip_hl)-4*(tcp_hdr->th_off); 
  	 
  		printf("Data:\n"); 
  		for(i=0;i< Data_len;i++) 
